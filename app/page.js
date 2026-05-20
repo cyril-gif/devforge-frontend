@@ -55,6 +55,11 @@ export default function Home() {
     🏆 Leaderboard
   </button>
 </Link>
+<Link href="/games">
+  <button className="px-4 py-2 bg-neon-purple/20 text-neon-purple rounded-lg hover:bg-neon-purple/30">
+    🎮 Games
+  </button>
+</Link>
           </div>
         </div>
       </header>
