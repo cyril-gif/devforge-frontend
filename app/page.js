@@ -60,6 +60,11 @@ export default function Home() {
     🎮 Games
   </button>
 </Link>
+<Link href="/profile">
+  <button className="px-4 py-2 bg-neon-purple/20 text-neon-purple rounded-lg">
+    👤 Profile
+  </button>
+</Link>
           </div>
         </div>
       </header>
