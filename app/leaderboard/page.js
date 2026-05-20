@@ -14,13 +14,14 @@ export default function LeaderboardPage() {
   useEffect(() => {
     fetchLeaderboard();
     calculateWeeklyReset();
+    const interval = setInterval(calculateWeeklyReset, 60000); // update timer every minute
+    return () => clearInterval(interval);
   }, []);
 
   const fetchLeaderboard = async () => {
     try {
       const res = await api.get('/api/leaderboard?sort=xp');
       setUsers(res.data);
-      // find current user's rank
       if (user) {
         const rank = res.data.findIndex(u => u._id === user.id) + 1;
         setUserRank(rank > 0 ? rank : null);
@@ -33,7 +34,6 @@ export default function LeaderboardPage() {
   };
 
   const calculateWeeklyReset = () => {
-    // Reset every Monday 00:00 UTC
     const now = new Date();
     const nextMonday = new Date(now);
     nextMonday.setUTCDate(now.getUTCDate() + ((1 + 7 - now.getUTCDay()) % 7));
@@ -48,7 +48,7 @@ export default function LeaderboardPage() {
   if (loading) return <div className="text-center py-20 text-neon-cyan">Loading leaderboard...</div>;
 
   return (
-    <div className="min-h-screen bg-neon-darker p-4">
+    <div className="min-h-screen bg-neon-darker p-4 pb-20">
       <div className="container mx-auto max-w-2xl">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-neon-purple to-neon-cyan bg-clip-text text-transparent">
@@ -73,12 +73,12 @@ export default function LeaderboardPage() {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-400">XP</p>
-              <p className="text-xl font-bold text-neon-cyan">{users.find(u => u._id === user.id)?.xp || 0}</p>
+              <p className="text-xl font-bold text-neon-cyan">{users.find(u => u._id === user?.id)?.xp || 0}</p>
             </div>
           </div>
         )}
 
-        {/* Leaderboard list */}
+        {/* Leaderboard list with avatars and clickable rows */}
         <div className="bg-neon-dark/50 backdrop-blur-sm border border-neon-purple/30 rounded-xl overflow-hidden">
           {users.map((u, idx) => {
             let rankDisplay = '';
@@ -88,22 +88,28 @@ export default function LeaderboardPage() {
             else rankDisplay = `${idx+1}`;
             const isCurrentUser = u._id === user?.id;
             return (
-              <div
-                key={u._id}
-                className={`flex justify-between items-center p-4 border-b border-neon-purple/10 ${
+              <Link href={`/profile/${u._id}`} key={u._id}>
+                <div className={`flex justify-between items-center p-4 border-b border-neon-purple/10 cursor-pointer transition ${
                   isCurrentUser ? 'bg-neon-purple/20' : 'hover:bg-neon-purple/5'
-                } transition`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="w-8 font-bold text-neon-cyan">{rankDisplay}</span>
-                  <span className={isCurrentUser ? 'text-neon-cyan font-semibold' : 'text-gray-200'}>
-                    {u.username} {isCurrentUser && '(you)'}
-                  </span>
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 font-bold text-neon-cyan">{rankDisplay}</span>
+                    <div className="w-8 h-8 rounded-full bg-neon-purple/20 flex items-center justify-center overflow-hidden">
+                      {u.avatar ? (
+                        <img src={u.avatar} alt="avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-sm">👤</span>
+                      )}
+                    </div>
+                    <span className={isCurrentUser ? 'text-neon-cyan font-semibold' : 'text-gray-200'}>
+                      {u.username} {isCurrentUser && '(you)'}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-neon-cyan font-bold">{u.xp} XP</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-neon-cyan font-bold">{u.xp} XP</span>
-                </div>
-              </div>
+              </Link>
             );
           })}
           {users.length === 0 && <div className="p-6 text-center text-gray-400">No users yet. Be the first!</div>}
