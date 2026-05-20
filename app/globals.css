@@ -12,8 +12,19 @@
   .neon-card {
     @apply bg-neon-dark/50 backdrop-blur-sm border border-neon-purple/30 rounded-xl p-6;
   }
-  
+
   .neon-button-primary {
     @apply px-6 py-2 rounded-lg bg-gradient-to-r from-neon-purple to-neon-pink text-white font-semibold transition-all hover:shadow-lg hover:shadow-neon-purple/50;
+  }
+}
+
+/* Bottom navigation spacing – only on mobile */
+body {
+  padding-bottom: 70px;
+}
+
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 0;
   }
 }
