@@ -13,9 +13,9 @@ module.exports = {
           cyan: '#00f0ff',
           dark: '#0a0a0f',
           darker: '#050508',
-        }
-      }
+        },
+      },
     },
   },
   plugins: [],
-} 
+};
