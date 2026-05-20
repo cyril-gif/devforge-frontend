@@ -50,21 +50,6 @@ export default function Home() {
             <button onClick={logout} className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30">
               Logout
             </button>
-            <Link href="/leaderboard">
-  <button className="px-4 py-2 bg-neon-purple/20 text-neon-purple rounded-lg hover:bg-neon-purple/30">
-    🏆 Leaderboard
-  </button>
-</Link>
-<Link href="/games">
-  <button className="px-4 py-2 bg-neon-purple/20 text-neon-purple rounded-lg hover:bg-neon-purple/30">
-    🎮 Games
-  </button>
-</Link>
-<Link href="/profile">
-  <button className="px-4 py-2 bg-neon-purple/20 text-neon-purple rounded-lg">
-    👤 Profile
-  </button>
-</Link>
           </div>
         </div>
       </header>

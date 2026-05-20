@@ -51,6 +51,27 @@ export default function ProfilePage() {
   if (loading) return <div className="text-center py-20 text-neon-cyan">Loading profile...</div>;
   if (!profile) return <div className="text-center py-20 text-red-400">Profile not found</div>;
 
+  const handleAvatarChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 1024 * 1024) {
+    alert('Image must be less than 1MB');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onloadend = async () => {
+    const base64 = reader.result;
+    try {
+      const res = await api.put('/api/profile', { avatar: base64 });
+      setProfile(res.data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload avatar');
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
   return (
     <div className="min-h-screen bg-neon-darker p-4">
       <div className="container mx-auto max-w-3xl">
@@ -62,21 +83,39 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile header */}
-        <div className="bg-neon-dark/50 border border-neon-purple/30 rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-neon-purple/20 flex items-center justify-center text-3xl">
-              {profile.avatar ? <img src={profile.avatar} className="rounded-full" /> : '👤'}
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">{profile.username}</h2>
-              <p className="text-gray-400">{profile.location || '🌍 Anywhere'}</p>
-              <div className="flex gap-2 mt-1">
-                <span className="text-neon-cyan">⭐ {stats.xp} XP</span>
-                <span className="text-neon-purple">🔥 {stats.streak} day streak</span>
-                <span className="text-yellow-400">🏆 Level {stats.level}</span>
-              </div>
-            </div>
-          </div>
+       <div className="flex items-center gap-4">
+  <div className="relative">
+    <div className="w-20 h-20 rounded-full bg-neon-purple/20 flex items-center justify-center text-3xl overflow-hidden">
+      {profile.avatar ? (
+        <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+      ) : (
+        '👤'
+      )}
+    </div>
+    <button
+      onClick={() => document.getElementById('avatarInput').click()}
+      className="absolute bottom-0 right-0 bg-neon-cyan text-black rounded-full p-1 text-xs"
+    >
+      📷
+    </button>
+    <input
+      id="avatarInput"
+      type="file"
+      accept="image/jpeg,image/png,image/gif"
+      className="hidden"
+      onChange={handleAvatarChange}
+    />
+  </div>
+  <div>
+    <h2 className="text-2xl font-bold">{profile.username}</h2>
+    <p className="text-gray-400">{profile.location || '🌍 Anywhere'}</p>
+    <div className="flex gap-2 mt-1">
+      <span className="text-neon-cyan">⭐ {stats.xp} XP</span>
+      <span className="text-neon-purple">🔥 {stats.streak} day streak</span>
+      <span className="text-yellow-400">🏆 Level {stats.level}</span>
+    </div>
+  </div>
+
           {!editing && (
             <div className="mt-4">
               <p className="text-gray-300">{profile.bio || 'No bio yet.'}</p>
