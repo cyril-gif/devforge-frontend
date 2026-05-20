@@ -38,46 +38,56 @@ export default function UserProfilePage() {
   const isOwnProfile = user?.id === id;
 
   return (
-    <div className="min-h-screen bg-neon-darker p-4 pb-20">
-      <div className="container mx-auto max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-neon-purple to-neon-cyan bg-clip-text text-transparent">
-            Profile
-          </h1>
-          <Link href="/leaderboard" className="text-neon-cyan hover:underline">← Back</Link>
-        </div>
-
-        {/* User info card */}
-        <div className="bg-neon-dark/50 border border-neon-purple/30 rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-neon-purple/20 flex items-center justify-center text-3xl overflow-hidden">
+    <div className="min-h-screen bg-neon-darker pb-20">
+      <div className="container mx-auto max-w-3xl px-4 py-6">
+        {/* Profile Card (read‑only) */}
+        <div className="bg-neon-dark/50 backdrop-blur-sm border border-neon-purple/30 rounded-xl p-6 mb-6">
+          <div className="flex flex-col items-center text-center">
+            {/* Avatar */}
+            <div className="w-24 h-24 rounded-full bg-neon-purple/20 flex items-center justify-center text-4xl overflow-hidden mb-4">
               {profile.avatar ? (
                 <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 '👤'
               )}
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">{profile.username}</h2>
-              <p className="text-gray-400">{profile.location || '🌍 Anywhere'}</p>
-              <div className="flex gap-2 mt-1">
-                <span className="text-neon-cyan">⭐ {stats.xp} XP</span>
-                <span className="text-neon-purple">🔥 {stats.streak} day streak</span>
-                <span className="text-yellow-400">🏆 Level {stats.level}</span>
+
+            <h2 className="text-2xl font-bold">{profile.username}</h2>
+            <div className="flex items-center gap-2 text-gray-400 mt-1">
+              <span>{profile.location || '🌍 Anywhere'}</span>
+              <span>•</span>
+              <span>🏆 Level {stats.level}</span>
+            </div>
+
+            {/* XP and Streak stats */}
+            <div className="grid grid-cols-2 gap-4 w-full mt-4 bg-black/30 rounded-lg p-3">
+              <div className="text-center">
+                <p className="text-xs text-gray-400">Total XP</p>
+                <p className="text-2xl font-bold text-neon-cyan">{stats.xp}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-gray-400">Current Streak</p>
+                <p className="text-2xl font-bold text-neon-purple">🔥 {stats.streak}</p>
               </div>
             </div>
+
+            {/* Bio & website */}
+            {profile.bio && (
+              <div className="mt-4 text-center text-gray-300 border-t border-neon-purple/20 pt-4">
+                <p>{profile.bio}</p>
+                {profile.website && (
+                  <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-neon-cyan text-sm block mt-1">
+                    {profile.website}
+                  </a>
+                )}
+              </div>
+            )}
           </div>
-          {profile.bio && <p className="mt-4 text-gray-300">{profile.bio}</p>}
-          {profile.website && (
-            <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-neon-cyan block mt-2">
-              🔗 {profile.website}
-            </a>
-          )}
         </div>
 
         {/* Course Progress */}
         <div className="bg-neon-dark/50 border border-neon-purple/30 rounded-xl p-6 mb-6">
-          <h3 className="text-xl font-bold mb-4">Course Progress</h3>
+          <h3 className="text-xl font-bold mb-4">📚 Course Progress</h3>
           {Object.values(progress).length === 0 && <p className="text-gray-400">No courses started yet.</p>}
           {Object.values(progress).map(c => (
             <div key={c.title} className="mb-3">
@@ -92,15 +102,22 @@ export default function UserProfilePage() {
           ))}
         </div>
 
-        {/* Certificates */}
+        {/* Certificates (if any) */}
         {certificates.length > 0 && (
           <div className="bg-neon-dark/50 border border-neon-purple/30 rounded-xl p-6">
-            <h3 className="text-xl font-bold mb-4">Certificates 🎓</h3>
+            <h3 className="text-xl font-bold mb-4">🎓 Certificates</h3>
             <ul className="list-disc list-inside text-neon-cyan">
               {certificates.map(cert => <li key={cert}>{cert} – Completed!</li>)}
             </ul>
           </div>
         )}
+
+        {/* Back to Leaderboard link */}
+        <div className="text-center mt-4">
+          <Link href="/leaderboard" className="text-neon-cyan text-sm hover:underline">
+            ← Back to Leaderboard
+          </Link>
+        </div>
       </div>
     </div>
   );
