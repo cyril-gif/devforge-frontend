@@ -1,13 +1,13 @@
 export default async function sitemap() {
   return [
     {
-      url: 'https://yourdomain.com',
+      url: 'https://devforge-tech.vercel.app',
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 1,
+      priority: 1.0,
     },
     {
-      url: 'https://yourdomain.com/courses',
+      url: 'https://devforge-tech.vercel.app/dashboard',
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
