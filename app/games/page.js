@@ -68,20 +68,7 @@ const fetchCreated = async () => {
   setCreatedChallenges(res.data);
 };
 
-const createChallenge = async (opponentId) => {
-  if (!selectedCourse) {
-    alert('Please select a course first');
-    return;
-  }
-  try {
-    const res = await api.post('/api/challenges', { opponentId, courseId: selectedCourse });
-    // Redirect to the challenge page for the challenger to answer
-    window.location.href = `/challenge/${res.data._id}`;  // <-- add this line
-  } catch (err) {
-    console.error(err);
-    alert('Failed to create challenge');
-  }
-};
+
   try {
     const res = await api.post('/api/challenges', { opponentId, courseId: selectedCourse });
     // Redirect to the challenge page for the challenger to answer
