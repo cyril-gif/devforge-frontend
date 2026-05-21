@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import Image from 'next/image';
+import Footer from '@/components/Footer';
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -37,12 +37,15 @@ export default function LandingPage() {
     }
   };
 
+  // Updated courses list: 7 courses
   const courses = [
     { title: 'HTML', icon: '🌐', description: 'Structure the web', color: 'from-orange-500 to-red-500' },
     { title: 'CSS', icon: '🎨', description: 'Style beautifully', color: 'from-blue-500 to-cyan-500' },
     { title: 'JavaScript', icon: '⚡', description: 'Make it interactive', color: 'from-yellow-500 to-orange-500' },
     { title: 'Node.js', icon: '🚀', description: 'Backend APIs', color: 'from-green-500 to-emerald-500' },
     { title: 'Vibe Coding', icon: '🎵', description: 'Creative projects', color: 'from-purple-500 to-pink-500' },
+    { title: 'Express.js', icon: '⚙️', description: 'Web framework', color: 'from-gray-500 to-slate-500' },
+    { title: 'Python', icon: '🐍', description: 'Versatile language', color: 'from-blue-600 to-cyan-600' }
   ];
 
   return (
@@ -107,10 +110,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Course Preview */}
+      {/* Course Preview – now shows all 7 courses */}
       <section className="py-16 max-w-7xl mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12">Choose your path</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {courses.map((course) => (
             <div key={course.title} className="bg-neon-dark/30 rounded-xl p-5 text-center border border-neon-purple/20 hover:scale-105 transition">
               <div className="text-4xl mb-2">{course.icon}</div>
@@ -122,9 +125,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-neon-purple/20 py-8 text-center text-gray-500 text-sm">
-        © 2026 DevForge. Built with ❤️ for learners everywhere.
-      </footer>
+      <Footer />
 
       {/* Auth Modal */}
       {showAuthModal && (
