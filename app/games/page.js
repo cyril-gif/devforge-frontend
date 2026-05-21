@@ -64,14 +64,22 @@ export default function GamesPage() {
   const [createdChallenges, setCreatedChallenges] = useState([]);
 
 const fetchCreated = async () => {
-  const res = await api.get('/api/challenges/my-created');
-  setCreatedChallenges(res.data);
+  try {
+    const res = await api.get('/api/challenges/my-created');
+    setCreatedChallenges(res.data);
+  } catch (err) {
+    console.error(err);
+  }
 };
 
-
+const createChallenge = async (opponentId) => {
+  if (!selectedCourse) {
+    alert( 'Please select a course first');
+    return;
+  }
   try {
     const res = await api.post('/api/challenges', { opponentId, courseId: selectedCourse });
-    // Redirect to the challenge page for the challenger to answer
+    // Correct redirect using backticks and res.data._id
     window.location.href = `/challenge/${res.data._id}`;
   } catch (err) {
     console.error(err);
@@ -79,10 +87,10 @@ const fetchCreated = async () => {
   }
 };
 
-  const acceptChallenge = async (challengeId) => {
-    await api.post(`/api/challenges/${challengeId}/accept`);
-    window.location.href = `/challenge/${challengeId}`;
-  };
+const acceptChallenge = async (challengeId) => {
+  await api.post(`/api/challenges/${challengeId}/accept`);
+  window.location.href = `/challenge/${challengeId}`;
+};
 
   const getRandomOpponent = async () => {
     setRandomOpponent(null);
