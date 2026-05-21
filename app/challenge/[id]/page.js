@@ -14,6 +14,7 @@ export default function ChallengePage() {
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null); // 'challenger' or 'opponent'
 
   useEffect(() => {
     if (id && user) fetchChallenge();
@@ -22,20 +23,32 @@ export default function ChallengePage() {
   const fetchChallenge = async () => {
     try {
       const res = await api.get(`/api/challenges/${id}`);
-      setChallenge(res.data);
-      // If user already answered, populate existing answers
+      const challengeData = res.data;
+      setChallenge(challengeData);
       const userId = user.id;
-      const existingAnswers = userId === res.data.challengerId._id
-        ? res.data.challengerAnswers
-        : res.data.opponentAnswers;
-      if (existingAnswers && existingAnswers.length) {
-        setAnswers(existingAnswers);
-        setSubmitted(true);
-        // Determine result if challenge completed
-        if (res.data.status === 'completed') {
-          const won = res.data.winnerId?._id === userId;
-          setResult({ won, xp: res.data.xpAwarded });
+      if (challengeData.challengerId._id === userId) {
+        setUserRole('challenger');
+        // Pre-fill existing answers if any
+        if (challengeData.challengerAnswers && challengeData.challengerAnswers.length) {
+          setAnswers(challengeData.challengerAnswers);
+          setSubmitted(true);
         }
+      } else if (challengeData.opponentId._id === userId) {
+        setUserRole('opponent');
+        if (challengeData.opponentAnswers && challengeData.opponentAnswers.length) {
+          setAnswers(challengeData.opponentAnswers);
+          setSubmitted(true);
+        }
+      } else {
+        alert('You are not part of this challenge');
+        router.push('/games');
+      }
+
+      // If challenge already completed, show result
+      if (challengeData.status === 'completed') {
+        const won = challengeData.winnerId?._id === userId;
+        setResult({ won, xp: challengeData.xpAwarded });
+        setSubmitted(true);
       }
     } catch (err) {
       console.error(err);
@@ -64,7 +77,6 @@ export default function ChallengePage() {
       const won = updated.winnerId?._id === userId;
       setResult({ won, xp: updated.xpAwarded });
       if (updated.status === 'completed') {
-        // After both have answered, show result and auto‑redirect after 3s
         setTimeout(() => router.push('/games'), 3000);
       }
     } catch (err) {
@@ -76,20 +88,19 @@ export default function ChallengePage() {
   if (loading) return <div className="text-center py-20 text-neon-cyan">Loading challenge...</div>;
   if (!challenge) return <div className="text-center py-20 text-red-400">Challenge not found</div>;
 
-  const isMyTurn = () => {
-    const userId = user.id;
-    const myAnswers = userId === challenge.challengerId._id
-      ? challenge.challengerAnswers
-      : challenge.opponentAnswers;
-    return (!myAnswers || myAnswers.length === 0) && challenge.status === 'accepted';
-  };
-
   const opponentName = challenge.challengerId._id === user.id
     ? challenge.opponentId.username
     : challenge.challengerId.username;
 
+  const iAmChallenger = userRole === 'challenger';
+  const myAnswers = iAmChallenger ? challenge.challengerAnswers : challenge.opponentAnswers;
+  const hasAnswered = myAnswers && myAnswers.length === 5;
+  const opponentHasAnswered = iAmChallenger
+    ? (challenge.opponentAnswers && challenge.opponentAnswers.length === 5)
+    : (challenge.challengerAnswers && challenge.challengerAnswers.length === 5);
+
   return (
-    <div className="min-h-screen bg-neon-darker p-4">
+    <div className="min-h-screen bg-neon-darker p-4 pb-20">
       <div className="container mx-auto max-w-2xl">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-neon-cyan">⚔️ Duel: {opponentName}</h1>
@@ -98,7 +109,7 @@ export default function ChallengePage() {
 
         {!submitted ? (
           <>
-            <p className="text-gray-300 mb-4">Answer all 5 questions correctly. The player with more correct answers wins +50 XP!</p>
+            <p className="text-gray-300 mb-4">Answer all 5 questions. The player with more correct answers wins +50 XP!</p>
             {challenge.questions.map((q, idx) => (
               <div key={idx} className="bg-neon-dark/50 border border-neon-purple/30 rounded-xl p-4 mb-4">
                 <p className="font-semibold mb-3">{idx+1}. {q.question}</p>
@@ -121,14 +132,14 @@ export default function ChallengePage() {
             ))}
             <button
               onClick={submitAnswers}
-              className="w-full bg-gradient-to-r from-neon-purple to-neon-pink py-3 rounded-lg font-bold text-lg mt-4"
+              className="w-full bg-gradient-to-r from-neon-purple to-neon-pink py-3 rounded-lg font-bold text-lg"
             >
               Submit Answers
             </button>
           </>
         ) : (
           <div className="bg-neon-dark/50 border border-neon-purple/30 rounded-xl p-6 text-center">
-            {result && (
+            {result ? (
               <>
                 {result.won ? (
                   <div className="text-green-400 text-2xl mb-2">🎉 You won! 🎉</div>
@@ -136,18 +147,22 @@ export default function ChallengePage() {
                   <div className="text-red-400 text-2xl mb-2">😞 You lost</div>
                 )}
                 <p className="text-gray-300">You earned <span className="text-neon-cyan font-bold">{result.xp} XP</span> from this duel.</p>
-                {challenge.status === 'completed' && (
-                  <p className="text-gray-400 mt-4">Redirecting to Games hub...</p>
-                )}
-                {challenge.status !== 'completed' && (
-                  <p className="text-gray-400 mt-4">Waiting for opponent to answer...</p>
+              </>
+            ) : (
+              <>
+                <p className="text-neon-cyan">Your answers have been submitted!</p>
+                {!opponentHasAnswered && (
+                  <p className="text-gray-400 mt-2">Waiting for opponent to answer...</p>
                 )}
               </>
+            )}
+            {challenge.status === 'completed' && (
+              <p className="text-gray-400 mt-4">Redirecting to Games hub...</p>
             )}
           </div>
         )}
 
-        {!isMyTurn() && !submitted && (
+        {!submitted && hasAnswered && (
           <div className="text-center text-yellow-400 mt-4">
             ⏳ You've already answered. Waiting for opponent to finish...
           </div>

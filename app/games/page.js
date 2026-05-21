@@ -24,6 +24,7 @@ export default function GamesPage() {
       fetchPending();
       fetchHistory();
       fetchWeeklyLeaderboard();
+      fetchCreated();
     }
   }, [user]);
 
@@ -60,15 +61,36 @@ export default function GamesPage() {
     setWeeklyLeaderboard(res.data);
   };
 
-  const createChallenge = async (opponentId) => {
-    if (!selectedCourse) {
-      alert('Please select a course first');
-      return;
-    }
-    await api.post('/api/challenges', { opponentId, courseId: selectedCourse });
-    alert('Challenge sent!');
-    fetchPending();
-  };
+  const [createdChallenges, setCreatedChallenges] = useState([]);
+
+const fetchCreated = async () => {
+  const res = await api.get('/api/challenges/my-created');
+  setCreatedChallenges(res.data);
+};
+
+const createChallenge = async (opponentId) => {
+  if (!selectedCourse) {
+    alert('Please select a course first');
+    return;
+  }
+  try {
+    const res = await api.post('/api/challenges', { opponentId, courseId: selectedCourse });
+    // Redirect to the challenge page for the challenger to answer
+    window.location.href = `/challenge/${res.data._id}`;  // <-- add this line
+  } catch (err) {
+    console.error(err);
+    alert('Failed to create challenge');
+  }
+};
+  try {
+    const res = await api.post('/api/challenges', { opponentId, courseId: selectedCourse });
+    // Redirect to the challenge page for the challenger to answer
+    window.location.href = `/challenge/${res.data._id}`;
+  } catch (err) {
+    console.error(err);
+    alert('Failed to create challenge');
+  }
+};
 
   const acceptChallenge = async (challengeId) => {
     await api.post(`/api/challenges/${challengeId}/accept`);
@@ -184,6 +206,24 @@ export default function GamesPage() {
             </div>
           ))}
         </div>
+
+        {/* My Created Challenges (not yet answered by me) */}
+<div className="bg-neon-dark/50 border border-neon-purple/30 rounded-xl p-6 mb-6">
+  <h2 className="text-xl font-bold mb-4">📤 My Active Challenges</h2>
+  {createdChallenges.length === 0 && <p className="text-gray-400">None</p>}
+  {createdChallenges.map(c => (
+    <div key={c._id} className="flex justify-between items-center border-b border-neon-purple/20 py-2">
+      <span>vs {c.opponentId?.username}</span>
+      {c.challengerAnswers?.length === 0 ? (
+        <Link href={`/challenge/${c._id}`} className="bg-neon-cyan text-black px-3 py-1 rounded-lg text-sm">
+          Answer Now
+        </Link>
+      ) : (
+        <span className="text-gray-400">Waiting for opponent</span>
+      )}
+    </div>
+  ))}
+</div>
 
         {/* Weekly Leaderboard */}
         <div className="bg-neon-dark/50 border border-neon-purple/30 rounded-xl p-6 mb-6">
