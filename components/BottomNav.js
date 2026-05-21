@@ -15,7 +15,7 @@ export default function BottomNav() {
   if (pathname === '/') return null;
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-neon-dark/90 backdrop-blur-lg border-t border-neon-purple/30 py-2 px-4 flex justify-around items-center z-50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-neon-dark/90 backdrop-blur-lg border-t border-neon-purple/30 py-2 px-4 flex justify-around items-center z-50">
       {navItems.map((item) => (
         <Link key={item.href} href={item.href} className="flex-1">
           <div className={`flex flex-col items-center gap-1 py-1 rounded-lg transition ${
