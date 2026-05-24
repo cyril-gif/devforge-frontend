@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import ThemeToggle from '@/components/ThemeToggle';
 import api from '@/lib/api';
 import Link from 'next/link';
 
@@ -43,6 +44,7 @@ export default function Home() {
             DevForge
           </h1>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <div className="text-right">
               <p className="text-sm text-gray-400">{user.username}</p>
               <p className="text-neon-cyan font-bold">⚡ {progress?.xp || 0} XP</p>

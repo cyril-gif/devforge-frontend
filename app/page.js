@@ -2,23 +2,33 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
+import api from '@/lib/api'; // for resend endpoint
 import Footer from '@/components/Footer';
+import SocialLoginButtons from '@/components/SocialLoginButtons';
 
 export default function LandingPage() {
-  const { user } = useAuth();
+  const { user, login, register } = useAuth();
   const router = useRouter();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const { login, register } = useAuth();
 
-  // If already logged in, redirect to dashboard
+  // for resend verification
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [showResend, setShowResend] = useState(false);
+
+  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       router.push('/dashboard');
+    }
+    // Check for verified=true query param (after email verification)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('verified') === 'true') {
+      alert('Email verified! You can now log in.');
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [user, router]);
 
@@ -27,25 +37,49 @@ export default function LandingPage() {
     try {
       if (isLogin) {
         await login(email, password);
+        setShowAuthModal(false);
+        router.push('/dashboard');
       } else {
+        // Registration: no auto-login, just show message
         await register(username, email, password);
+        alert('Registration successful! Please check your email to verify your account.');
+        setShowAuthModal(false);
+        // Reset form
+        setUsername('');
+        setEmail('');
+        setPassword('');
       }
-      setShowAuthModal(false);
-      router.push('/dashboard');
     } catch (err) {
-      alert(err.response?.data?.message || 'Authentication failed');
+      const status = err.response?.status;
+      const message = err.response?.data?.message;
+      if (isLogin && status === 403 && message?.includes('verify your email')) {
+        setUnverifiedEmail(email);
+        setShowResend(true);
+        alert(message);
+      } else {
+        alert(message || (isLogin ? 'Login failed' : 'Registration failed'));
+      }
     }
   };
 
-  // Updated courses list: 7 courses
+  const resendVerification = async () => {
+    try {
+      await api.post('/api/auth/resend-verification', { email: unverifiedEmail });
+      alert('Verification email resent! Check your inbox.');
+      setShowResend(false);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to resend verification');
+    }
+  };
+
   const courses = [
-    { title: 'HTML', icon: '🌐', description: 'Structure the web', color: 'from-orange-500 to-red-500' },
-    { title: 'CSS', icon: '🎨', description: 'Style beautifully', color: 'from-blue-500 to-cyan-500' },
-    { title: 'JavaScript', icon: '⚡', description: 'Make it interactive', color: 'from-yellow-500 to-orange-500' },
-    { title: 'Node.js', icon: '🚀', description: 'Backend APIs', color: 'from-green-500 to-emerald-500' },
-    { title: 'Vibe Coding', icon: '🎵', description: 'Creative projects', color: 'from-purple-500 to-pink-500' },
-    { title: 'Express.js', icon: '⚙️', description: 'Web framework', color: 'from-gray-500 to-slate-500' },
-    { title: 'Python', icon: '🐍', description: 'Versatile language', color: 'from-blue-600 to-cyan-600' }
+    { title: 'HTML', icon: '🌐', description: 'Structure the web' },
+    { title: 'CSS', icon: '🎨', description: 'Style beautifully' },
+    { title: 'JavaScript', icon: '⚡', description: 'Make it interactive' },
+    { title: 'Node.js', icon: '🚀', description: 'Backend APIs' },
+    { title: 'Vibe Coding', icon: '🎵', description: 'Creative projects' },
+    { title: 'Express.js', icon: '⚙️', description: 'Web framework' },
+    { title: 'Python', icon: '🐍', description: 'Versatile language' },
   ];
 
   return (
@@ -70,6 +104,8 @@ export default function LandingPage() {
           </button>
         </div>
       </nav>
+
+
 
       {/* Hero Section */}
       <section className="text-center py-20 px-4 max-w-4xl mx-auto">
@@ -110,7 +146,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Course Preview – now shows all 7 courses */}
+      {/* Course Preview */}
       <section className="py-16 max-w-7xl mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12">Choose your path</h2>
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -124,13 +160,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <Footer />
 
       {/* Auth Modal */}
       {showAuthModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setShowAuthModal(false)}>
-          <div className="bg-neon-dark border border-neon-purple/30 rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-neon-dark border border-neon-purple/30 rounded-xl p-6 max-w-md w-full relative" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowAuthModal(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white">✕</button>
             <h2 className="text-2xl font-bold text-center mb-4">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
             <form onSubmit={handleAuth} className="space-y-4">
               {!isLogin && (
@@ -159,17 +195,38 @@ export default function LandingPage() {
                 className="w-full px-4 py-2 bg-black/50 border border-neon-purple/30 rounded-lg"
                 required
               />
+              <SocialLoginButtons />
+
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAuthModal(false);
+                    router.push('/forgot-password');
+                  }}
+                  className="text-sm text-neon-cyan hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <button type="submit" className="w-full py-2 rounded-lg bg-gradient-to-r from-neon-purple to-neon-pink text-white font-semibold">
                 {isLogin ? 'Log In' : 'Sign Up'}
               </button>
             </form>
+            {showResend && (
+              <div className="mt-3 text-center">
+                <p className="text-yellow-400 text-sm">Didn't receive the email?</p>
+                <button onClick={resendVerification} className="text-neon-cyan text-sm underline">
+                  Click here to resend verification email
+                </button>
+              </div>
+            )}
             <p className="text-center text-gray-400 mt-4">
               {isLogin ? "Don't have an account? " : "Already have an account? "}
-              <button onClick={() => setIsLogin(!isLogin)} className="text-neon-cyan hover:underline">
+              <button onClick={() => { setIsLogin(!isLogin); setShowResend(false); setUnverifiedEmail(''); }} className="text-neon-cyan hover:underline">
                 {isLogin ? 'Sign up' : 'Log in'}
               </button>
             </p>
-            <button onClick={() => setShowAuthModal(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white">✕</button>
           </div>
         </div>
       )}

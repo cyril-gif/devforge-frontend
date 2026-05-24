@@ -33,13 +33,7 @@ export function AuthProvider({ children }) {
 
   const register = async (username, email, password) => {
     const res = await api.post('/api/auth/register', { username, email, password });
-    const { token, user } = res.data;
-    setToken(token);
-    setUser(user);
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    return user;
+    return res.data;
   };
 
   const logout = () => {
@@ -50,11 +44,21 @@ export function AuthProvider({ children }) {
     delete api.defaults.headers.common['Authorization'];
   };
 
+  // For social login (Google/GitHub)
+  const setUserFromSocial = (socialToken, socialUser) => {
+    setToken(socialToken);
+    setUser(socialUser);
+    localStorage.setItem('token', socialToken);
+    localStorage.setItem('user', JSON.stringify(socialUser));
+    api.defaults.headers.common['Authorization'] = `Bearer ${socialToken}`;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, setUserFromSocial, loading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 export const useAuth = () => useContext(AuthContext);
+
